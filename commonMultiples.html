@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Common Multiples</title>
+</head>
+<body>
+
+<h1>See Console</h1>
+
+<script type="text/javascript">
+
+var knownFactors = [];
+var expandedFactors = [];
+	
+//will return the smallest common multiple of all numbers in a sequence
+
+function smallestCommons(arr) {
+  console.log("____" + arr + "____");
+  
+  //Here's what we have to do: factorial of highest number, but reduce all numbers their prime factors
+ 
+ //sort input with highest number first
+  arr.sort(function(a, b) {
+    return b-a;
+  });
+  
+  var high = arr[0];
+  var low = arr[1];
+  
+  var primes = [];
+  knownFactors = [];
+  expandedFactors = [];
+
+  //find all the primes up to the high number
+  
+  function getPrimes(limit) {
+    
+    var notPrime = [];
+    
+    for (var i = 2; i <= limit; i++) {
+      if(!notPrime[i]) {
+        primes.push(i);
+        if(i <= Math.sqrt(limit)) {
+          for (var j = i*2; j <=limit; j+=i ) {
+            notPrime[j] = true;
+          }
+        }
+      }
+    }
+  }
+  
+//call function to get primes
+  
+  getPrimes(high);
+  
+  function isPrime(num) {
+    return primes.includes(num);
+  }
+//eliminate factors if they are included in higher numbers
+ 
+ // 5 * 2 * 2 * 3 = 60 
+ // 13 * 3 * 2 * 2 * 11 * 5 * 2 * 7 * 3 = 360360
+
+  
+  //starting from highest number and going to lowest in sequence
+  for (var x = high; x >=low; x--) {
+    if (isPrime(x) && !knownFactors.includes(x)) {
+      //we have a prime, push it (for a record) and change sum
+     knownFactors.push(x);
+
+    } else {
+
+      //call a function to reduce nonprime to a set of prime factors
+      expandedFactors = getPrimeFactors(x);
+
+      console.log("Expanded Factors: " + JSON.stringify(expandedFactors));
+
+      //function to add missing factors to array
+      computeExpansion(expandedFactors);
+
+
+
+    }
+  }
+  
+  //receives a number and converts it into an array of its prime factors
+  //e.g., 20 = [[5], [2, 2]], 40 = [[5], [2, 2, 2]], 54 = [[3, 3, 3], [2]]
+
+  function getPrimeFactors(num) {
+
+    //filter out prime numbers greater than half the given number
+    //and filter out any primes that are not divisible into num
+    var primeFactors = primes.filter(function(value) { 
+      return value <= num/2 && num % value === 0;
+    });
+
+    console.log("Prime Factors: " + primeFactors);
+
+    //initialize array
+    var factorsArray = [];
+    var expFactors = [];
+
+    //recursive function that will add element to array as many times
+    //as will be divided evenly into number   
+
+    function expand(num, factor) {
+    
+      if(num % factor === 0) {
+        //identified a prime factor and now pushing to array
+        expFactors.push(factor);
+        //call recursively to see if num is factor more than once (i.e. 2 * 2 * 2 = 8)
+        expand((num/factor), factor);
+      } else return;
+
+    }
+    
+    //will return array of primes from largest to smallest
+    for (var i = primeFactors.length-1; i >= 0; i--) {
+      expFactors = [];
+      //calls recursive function for each factor
+      expand(num, primeFactors[i]);
+      factorsArray.push(expFactors);
+    }
+
+    
+    return factorsArray; // i.e ([[5], [2, 2]])
+     
+  }
+
+  //will count number of each item in known factors and increase count until it equals necessary amount
+  function computeExpansion(factors) {
+    
+    var includes = false; 
+    
+    for (var a = 0; a < factors.length; a++) {
+      //outer loop of expanded factors which is an array of arrays
+
+      for (var b=0; b < factors[a].length; b++) {
+        //inner loop is an array of a single factor. each item represents a power of the number
+
+        //compare factors with known factors
+        var count = factors[a].length;
+        var factorCount = countFactors(factors[a][b]);
+        console.log("Factors = " + count + "; Known Equivalents = " + factorCount);
+
+        //set to true if known factors already includes this factor
+        includes = (factorCount >= count);
+        console.log("KnownFactors includes " + factors[a] + " = " + includes);
+        
+        //add factor since known factors is short one of these factors
+        if(!includes) {
+          console.log("Adding factor: " + factors[a][b]);
+          knownFactors.push(factors[a][b]);
+        }
+      }
+    }
+  }
+
+  function countFactors(factor) {
+    var counted = knownFactors.filter(function(value) {
+      return value === factor;
+    });
+    return counted.length;
+  }
+
+  var common = knownFactors.reduce(function(a, b) { return a * b;})
+  
+  console.log("################");
+  console.log("Sum of the following: " + knownFactors + "= " + common);
+  console.log("################");
+
+  return common;
+ 
+}
+
+
+smallestCommons([1,5]);
+smallestCommons([1, 13]);
+smallestCommons([23, 18]);
+
+</script>
+</body>
+</html>
